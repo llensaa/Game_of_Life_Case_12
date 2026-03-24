@@ -124,7 +124,8 @@ def main() -> None:
                                 except FileNotFoundError:
                                     print(ru.errors["NOT_GASPERS_GUN"])
                                     grid = gr.random_grid(rows, cols, 0.3)
-
+                                screen_type = disp.SCREEN_COLOR_SELECT
+                                
                             elif b["text"] == ru.buttons["GLIDER"]:
                                 use_preset = True
                                 try:
@@ -134,7 +135,6 @@ def main() -> None:
                                 except FileNotFoundError:
                                     print(ru.errors["NOT_GLIDER"])
                                     grid = gr.random_grid(rows, cols, 0.3)
-
                                 screen_type = disp.SCREEN_COLOR_SELECT
 
                             elif b["text"] == ru.buttons["NO_PRESET"]:
