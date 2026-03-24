@@ -4,8 +4,9 @@ import grid_io as gr
 import game_logic as gl
 import display as disp
 
-def main():
-    rows,cols = 40,40
+
+def main() -> None:
+    rows, cols = 40, 40
     cell = 20
     speed = 0.1
     running = False
@@ -15,21 +16,26 @@ def main():
     shape = disp.SHAPE_SQUARE
     color_id = 0
 
-    grid = gr.random_grid(rows,cols,0.3)
+    use_preset = False
 
-    screen,clock,w,h = disp.init_display(0,0)
+    grid = gr.random_grid(rows, cols, 0.3)
+
+    screen, clock, w, h = disp.init_display(0, 0)
     disp.load_music()
     bg = disp.load_background(screen)
 
     while True:
         if screen_type == disp.SCREEN_MAIN_MENU:
-            buttons = disp.create_buttons(["Играть","Выход"],w,300)
+            buttons = disp.create_buttons(["Играть", "Выход"], w, 300)
 
         elif screen_type == disp.SCREEN_SHAPE_SELECT:
-            buttons = disp.create_buttons(list(disp.SHAPE_NAMES.values()),w)
+            buttons = disp.create_buttons(list(disp.SHAPE_NAMES.values()), w)
+
+        elif screen_type == disp.SCREEN_PRESET_SELECT:  # Новый экран
+            buttons = disp.create_buttons(["Ружьё Гаспера", "Без пресетов"], w)
 
         elif screen_type == disp.SCREEN_COLOR_SELECT:
-            buttons = disp.create_buttons([c[0] for c in disp.COLOR_SCHEMES],w)
+            buttons = disp.create_buttons([c[0] for c in disp.COLOR_SCHEMES], w)
 
         else:
             buttons = []
@@ -53,28 +59,31 @@ def main():
                         gen += 1
 
                     elif e.key == pygame.K_r:
-                        grid = gr.random_grid(rows,cols)
+                        grid = gr.random_grid(rows, cols)
                         gen = 0
                         running = False
+                        use_preset = False
 
                     elif e.key == pygame.K_c:
-                        grid = gr.create_empty_grid(rows,cols)
+                        grid = gr.create_empty_grid(rows, cols)
                         gen = 0
                         running = False
+                        use_preset = False
 
                     elif e.key == pygame.K_l:
                         try:
                             grid = gr.load_grid_from_file("save.txt")
-                            rows,cols = len(grid),len(grid[0])
-                            screen,clock,w,h = disp.init_display(rows,cols,cell)
+                            rows, cols = len(grid), len(grid[0])
+                            screen, clock, w, h = disp.init_display(rows, cols, cell)
                             gen = 0
                             running = False
+                            use_preset = False
                         except:
                             pass
 
                     elif e.key == pygame.K_f:
                         try:
-                            gr.save_grid_to_file(grid,"save.txt")
+                            gr.save_grid_to_file(grid, "save.txt")
                         except:
                             pass
 
@@ -95,19 +104,44 @@ def main():
                                 sys.exit()
 
                         elif screen_type == disp.SCREEN_SHAPE_SELECT:
-                            for k,v in disp.SHAPE_NAMES.items():
+                            for k, v in disp.SHAPE_NAMES.items():
                                 if v == b.text:
                                     shape = k
-                                    screen_type = disp.SCREEN_COLOR_SELECT
+                                    screen_type = disp.SCREEN_PRESET_SELECT
+
+                        elif screen_type == disp.SCREEN_PRESET_SELECT:
+                            if b.text == "Ружьё Гаспера":
+                                use_preset = True
+                                try:
+
+                                    grid = gr.load_grid_from_file("gaspers_gun")
+                                    rows, cols = len(grid), len(grid[0])
+
+                                except FileNotFoundError:
+                                    print("Файл с ружьём Гаспера не найден. Использую стандартную сетку.")
+                                    grid = gr.random_grid(rows, cols, 0.3)
+                                except Exception as e:
+                                    print(f"Ошибка при загрузке пресета: {e}")
+                                    grid = gr.random_grid(rows, cols, 0.3)
+
+
+                                screen_type = disp.SCREEN_COLOR_SELECT
+
+                            elif b.text == "Без пресетов":
+                                use_preset = False
+                                screen_type = disp.SCREEN_COLOR_SELECT
 
                         elif screen_type == disp.SCREEN_COLOR_SELECT:
-                            for i,c in enumerate(disp.COLOR_SCHEMES):
+                            for i, c in enumerate(disp.COLOR_SCHEMES):
                                 if c[0] == b.text:
                                     color_id = i
-                                    a,d,g = c[1],c[2],c[3]
-                                    disp.handle_color_scheme(a,d,g)
-                                    screen,clock,w,h = disp.init_display(rows,cols,cell)
-                                    grid = gr.random_grid(rows,cols,0.3)
+                                    a, d, g = c[1], c[2], c[3]
+                                    disp.handle_color_scheme(a, d, g)
+                                    screen, clock, w, h = disp.init_display(rows, cols, cell)
+
+                                    if not use_preset:
+                                        grid = gr.random_grid(rows, cols, 0.3)
+
                                     gen = 0
                                     running = False
                                     screen_type = disp.SCREEN_GAME
@@ -115,33 +149,45 @@ def main():
         if screen_type == disp.SCREEN_GAME and running:
             grid = gl.next_generation(grid)
             gen += 1
-            pygame.time.delay(int(speed*1000))
+            pygame.time.delay(int(speed * 1000))
 
         if screen_type == disp.SCREEN_MAIN_MENU:
             if bg:
-                screen.blit(bg,(0,0))
+                screen.blit(bg, (0, 0))
             else:
-                screen.fill((20,20,40))
+                screen.fill((20, 20, 40))
             for b in buttons:
                 b.draw(screen)
 
         elif screen_type == disp.SCREEN_SHAPE_SELECT:
-            screen.fill((30,30,50))
+            screen.fill((30, 30, 50))
+            title = disp._font_medium.render("Выберите форму ячеек", True, (255, 255, 255))
+            screen.blit(title, (w // 2 - title.get_width() // 2, 100))
+            for b in buttons:
+                b.draw(screen)
+
+        elif screen_type == disp.SCREEN_PRESET_SELECT:  
+            screen.fill((30, 30, 50))
+            title = disp._font_medium.render("Выберите пресет", True, (255, 255, 255))
+            screen.blit(title, (w // 2 - title.get_width() // 2, 100))
             for b in buttons:
                 b.draw(screen)
 
         elif screen_type == disp.SCREEN_COLOR_SELECT:
-            screen.fill((30,30,50))
+            screen.fill((30, 30, 50))
+            title = disp._font_medium.render("Выберите цветовую схему", True, (255, 255, 255))
+            screen.blit(title, (w // 2 - title.get_width() // 2, 100))
             for b in buttons:
                 b.draw(screen)
 
         elif screen_type == disp.SCREEN_GAME:
-            screen.fill((0,0,0))
-            disp.draw_grid(screen,grid,shape)
-            disp.draw_ui(screen,gen,speed,running)
+            screen.fill((0, 0, 0))
+            disp.draw_grid(screen, grid, shape)
+            disp.draw_ui(screen, gen, speed, running)
 
         pygame.display.flip()
         clock.tick(60)
+
 
 if __name__ == "__main__":
     main()
