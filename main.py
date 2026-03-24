@@ -3,6 +3,7 @@ import sys
 import grid_io as gr
 import game_logic as gl
 import display as disp
+import ru_local as ru
 
 
 def main() -> None:
@@ -26,16 +27,20 @@ def main() -> None:
 
     while True:
         if screen_type == disp.SCREEN_MAIN_MENU:
-            buttons = disp.create_buttons(["Играть", "Выход"], w, 300)
+            buttons = disp.create_buttons(
+                [ru.buttons["PLAY"], ru.buttons["EXIT"]], w, 300
+            )
 
         elif screen_type == disp.SCREEN_SHAPE_SELECT:
-            buttons = disp.create_buttons(list(disp.SHAPE_NAMES.values()), w)
+            buttons = disp.create_buttons(list(ru.shapes.values()), w)
 
-        elif screen_type == disp.SCREEN_PRESET_SELECT:  # Новый экран
-            buttons = disp.create_buttons(["Ружьё Гаспера", "Без пресетов"], w)
+        elif screen_type == disp.SCREEN_PRESET_SELECT:
+            buttons = disp.create_buttons(
+                [ru.buttons["GASPERS_GUN"], ru.buttons["NO_PRESET"]], w
+            )
 
         elif screen_type == disp.SCREEN_COLOR_SELECT:
-            buttons = disp.create_buttons([c[0] for c in disp.COLOR_SCHEMES], w)
+            buttons = disp.create_buttons(list(ru.colors.values()), w)
 
         else:
             buttons = []
@@ -95,9 +100,9 @@ def main() -> None:
 
             if screen_type != disp.SCREEN_GAME:
                 for b in buttons:
-                    if b.handle(e):
+                    if disp.handle_button(b, e):
                         if screen_type == disp.SCREEN_MAIN_MENU:
-                            if b.text == "Играть":
+                            if b["text"] == ru.buttons["PLAY"]:
                                 screen_type = disp.SCREEN_SHAPE_SELECT
                             else:
                                 pygame.quit()
@@ -105,15 +110,14 @@ def main() -> None:
 
                         elif screen_type == disp.SCREEN_SHAPE_SELECT:
                             for k, v in disp.SHAPE_NAMES.items():
-                                if v == b.text:
+                                if v == b["text"]:
                                     shape = k
                                     screen_type = disp.SCREEN_PRESET_SELECT
 
                         elif screen_type == disp.SCREEN_PRESET_SELECT:
-                            if b.text == "Ружьё Гаспера":
+                            if b["text"] == ru.buttons["GASPERS_GUN"]:
                                 use_preset = True
                                 try:
-
                                     grid = gr.load_grid_from_file("gaspers_gun")
                                     rows, cols = len(grid), len(grid[0])
 
@@ -124,16 +128,15 @@ def main() -> None:
                                     print(f"Ошибка при загрузке пресета: {e}")
                                     grid = gr.random_grid(rows, cols, 0.3)
 
-
                                 screen_type = disp.SCREEN_COLOR_SELECT
 
-                            elif b.text == "Без пресетов":
+                            elif b["text"] == ru.buttons["NO_PRESET"]:
                                 use_preset = False
                                 screen_type = disp.SCREEN_COLOR_SELECT
 
                         elif screen_type == disp.SCREEN_COLOR_SELECT:
                             for i, c in enumerate(disp.COLOR_SCHEMES):
-                                if c[0] == b.text:
+                                if c[0] == b["text"]:
                                     color_id = i
                                     a, d, g = c[1], c[2], c[3]
                                     disp.handle_color_scheme(a, d, g)
@@ -157,28 +160,28 @@ def main() -> None:
             else:
                 screen.fill((20, 20, 40))
             for b in buttons:
-                b.draw(screen)
+                disp.draw_button(screen, b)
 
         elif screen_type == disp.SCREEN_SHAPE_SELECT:
             screen.fill((30, 30, 50))
-            title = disp._font_medium.render("Выберите форму ячеек", True, (255, 255, 255))
+            title = disp._font_medium.render(ru.titles["SHAPE_SELECT"], True, (255, 255, 255))
             screen.blit(title, (w // 2 - title.get_width() // 2, 100))
             for b in buttons:
-                b.draw(screen)
+                disp.draw_button(screen, b)
 
         elif screen_type == disp.SCREEN_PRESET_SELECT:
             screen.fill((30, 30, 50))
-            title = disp._font_medium.render("Выберите пресет", True, (255, 255, 255))
+            title = disp._font_medium.render(ru.titles["PRESET_SELECT"], True, (255, 255, 255))
             screen.blit(title, (w // 2 - title.get_width() // 2, 100))
             for b in buttons:
-                b.draw(screen)
+                disp.draw_button(screen, b)
 
         elif screen_type == disp.SCREEN_COLOR_SELECT:
             screen.fill((30, 30, 50))
-            title = disp._font_medium.render("Выберите цветовую схему", True, (255, 255, 255))
+            title = disp._font_medium.render(ru.titles["COLOR_SELECT"], True, (255, 255, 255))
             screen.blit(title, (w // 2 - title.get_width() // 2, 100))
             for b in buttons:
-                b.draw(screen)
+                disp.draw_button(screen, b)
 
         elif screen_type == disp.SCREEN_GAME:
             screen.fill((0, 0, 0))
