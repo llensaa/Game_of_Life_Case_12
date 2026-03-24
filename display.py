@@ -12,7 +12,7 @@ _font_small = None
 _font_medium = None
 _font_large = None
 
-RES_PATH = r"Case_12/resources"
+RES_PATH = r"resources"
 IMG_PATH = os.path.join(RES_PATH, "images")
 SND_PATH = os.path.join(RES_PATH, "sounds")
 
